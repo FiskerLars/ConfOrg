@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
 
+module RegistrationParser (parse_registration) where
 import Data.Yaml
 import qualified Data.Text as T
 import Data.Text.Encoding
@@ -24,15 +25,10 @@ instance FromJSON Registry
 -- TestString:
 -- name: Lars\ntitel: Dr.
 
-main:: IO ()
-main = runO $
-       do
-         str <- getContents >>= (return.prettyformat_input.(T.pack))
-         case decodeEither' $ encodeUtf8 str of
-          Right x -> hPutStrLn stdout $ registry_to_csv (x ::Registry)
-          Left err -> hPutStrLn stderr $ (prettyPrintParseException err)
-                      ++ "\n" ++ (T.unpack str)
 
+
+parse_registration = decodeEither'.encodeUtf8.prettyformat_input
+ 
 
 prettyformat_input:: T.Text -> T.Text
 prettyformat_input = T.unlines
@@ -75,12 +71,6 @@ prettyformat_input = T.unlines
                       | otherwise = (l++[c]):ls
 
 
-registry_to_csv:: Registry -> String
-registry_to_csv reg = let
-  fields_csv = [anrede
-               , (fromMaybe "").titel, vorname, nachname, affiliation, street, (T.pack).show.postcode, city, email] 
-  in
-   intercalate "; " $ map (\f -> T.unpack $ f reg) fields_csv
 
 
 
