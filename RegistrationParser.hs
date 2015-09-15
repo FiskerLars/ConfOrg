@@ -1,6 +1,10 @@
 {-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
 
-module RegistrationParser (parse_registration) where
+module RegistrationParser ( parse_registration, Registry
+                          , anrede, fromMaybe, titel
+                          , vorname, nachname
+                          , affiliation, street
+                          , postcode, city, email ) where
 import Data.Yaml
 import qualified Data.Text as T
 import Data.Text.Encoding
@@ -18,15 +22,15 @@ import Debug.Hood.Observe
 
 data Registry = Registry { anrede :: T.Text, vorname :: T.Text, nachname :: T.Text, titel:: Maybe T.Text
                          , affiliation :: T.Text, street :: T.Text
-			 , city :: T.Text, postcode :: Integer
-			 , email :: T.Text } deriving (Generic,Show)
+                         , city :: T.Text, postcode :: Integer
+                         , email :: T.Text } deriving (Generic,Show)
 instance FromJSON Registry
 
 -- TestString:
 -- name: Lars\ntitel: Dr.
 
 
-
+parse_registration:: T.Text -> Either ParseException Registry
 parse_registration = decodeEither'.encodeUtf8.prettyformat_input
  
 
