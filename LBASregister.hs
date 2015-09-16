@@ -3,11 +3,15 @@ import RegistrationParser
 
 import Data.Yaml
 import qualified Data.Text as T
+import Data.Text.Encoding (encodeUtf8, decodeUtf8, decodeLatin1)
+import qualified Data.ByteString as BS
+import Numeric (showHex)
 import System.IO
 import System.Environment (getArgs)
 import Data.List 
 import Data.Maybe (listToMaybe, fromMaybe)
-
+import Crypto.Hash.MD5 (hash)
+import qualified Data.ByteString as BS (pack)
 import Debug.Hood.Observe
 
 data Command = Command String (Registry -> IO T.Text)
@@ -58,17 +62,29 @@ registry_to_emails = return.email
 
 registry_apply_to_rechnung:: IO String -> Registry -> IO T.Text
 registry_apply_to_rechnung template r = let
+  anredeTag = T.pack "<<anrede>>"
   affiliationTag = T.pack "<<postal>>"
+  rechNrTag = T.pack "<<nr>>"
   affiliationLatexText r = T.intercalate (T.pack "\\\\") [ nameline r
                                                        , affiliation r
-                                                       , street r
-                                                       , T.pack ""
+                                                       , street r 
                                                        , cityline r]
-    where nameline r = (fromMaybe (T.pack "") (titel r))
-                       `T.append` (T.intercalate (T.pack " ") [ vorname r
+  anredeText r = T.intercalate (T.pack " ") [anrede r, nameline r]
+  nameline r = (fromMaybe (T.pack "") (titel r))
+               `T.append` (T.intercalate (T.pack " ") [ vorname r
                                                               , nachname r])
-          cityline r = T.intercalate (T.pack " ") [((T.pack).show.postcode) r, city r]
-  in template >>= return.(T.replace affiliationTag (affiliationLatexText r)).(T.pack)
+  cityline r = T.intercalate (T.pack " ") [ (T.pack "D-") `T.append` (((T.pack).show.postcode) r)
+                                          ,  city r]
+  rechNrText r =  genHashText
+                  $ T.concat [ vorname r, nachname r
+                             , (T.pack "LBAS15")
+                             , affiliation r]
+  genHashText = T.pack . take 7 . concat . map (flip showHex "") . BS.unpack . hash . encodeUtf8
+  in template >>= return
+     .(T.replace anredeTag (anredeText r))
+     .(T.replace affiliationTag (affiliationLatexText r))
+     .(T.replace rechNrTag (rechNrText r))
+     .(T.pack)
 
 open_db:: String -> IO [Registry]
 open_db db_file = undefined
