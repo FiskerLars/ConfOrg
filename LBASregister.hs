@@ -77,7 +77,7 @@ registry_apply_to_rechnung template r = let
                                           ,  city r]
   rechNrText r =  genHashText
                   $ T.concat [ vorname r, nachname r
-                             , (T.pack "LBAS15")
+                             , (T.pack "LBAS15Teilnahmegebühr")
                              , affiliation r]
   genHashText = T.pack . take 7 . concat . map (flip showHex "") . BS.unpack . hash . encodeUtf8
   in template >>= return
@@ -85,6 +85,16 @@ registry_apply_to_rechnung template r = let
      .(T.replace affiliationTag (affiliationLatexText r))
      .(T.replace rechNrTag (rechNrText r))
      .(T.pack)
+
+
+nameText r = T.intercalate (T.pack " ") [ fromMaybe (T.pack "") $ titel r
+                                        , vorname r, nachname r ]
+
+nameTagLatexTextInsert:: IO String -> Registry -> IO T.Text
+nameTagLatexTextInsert template r = template >>= return
+                                    . T.replace (T.pack "<<name>>") (nameText r)
+                                    . T.replace (T.pack "<<affiliation>>") (affiliation r)
+                                    . T.pack
 
 open_db:: String -> IO [Registry]
 open_db db_file = undefined
