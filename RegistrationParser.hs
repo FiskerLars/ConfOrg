@@ -21,7 +21,7 @@ import System.IO
 import Debug.Hood.Observe
 
 data Registry = Registry { anrede :: T.Text, vorname :: T.Text, nachname :: T.Text, titel:: Maybe T.Text
-                         , affiliation :: T.Text, street :: T.Text
+                         , affiliation :: Maybe T.Text, street :: T.Text
                          , city :: T.Text, postcode :: Integer
                          , email :: T.Text } deriving (Generic,Show)
 instance FromJSON Registry
